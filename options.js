@@ -32,7 +32,7 @@ function constructOptions() {
   inputs.forEach(input => {
     chrome.storage.sync.get(input, (data) => {
       const element = document.getElementById(input);
-      element.value = data[input];
+      element.value = data[input] || '';
     });
   })
 }
