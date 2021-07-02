@@ -1,16 +1,25 @@
 const form = document.getElementById('mainForm');
 
-console.log(form);
-
-const inputs = [
-  'baseURL',
-  'mainProject'
-]
+const addProjects = (projects) => {
+  projects.forEach(project => {
+    const id = project.trim();
+    chrome.contextMenus.create({
+      title: `${id}`,
+      id,
+      contexts:["selection"]
+    });
+  })
+}
 
 form.addEventListener('submit', ( event ) => {
   event.preventDefault();
-  getValues(event.currentTarget).forEach(item => {
+  getValues(event.currentTarget).forEach(async (item) => {
     chrome.storage.sync.set({ [item.id]: item.value });
+    if (item.id === 'projects') {
+      await chrome.contextMenus.removeAll();
+      const projects = item.value.split(',');
+      addProjects(projects);
+    }
   })
 })
 
@@ -26,41 +35,15 @@ const getValues = ( form ) => {
   return Object.values(inputsMap);
 };
 
-// Add a button to the page for each supplied color
 function constructOptions() {
+  chrome.storage.sync.get('baseURL', (data) => {
+    const element = document.getElementById('baseURL');
+    element.value = data['baseURL'] || '';
+  });
 
-  inputs.forEach(input => {
-    chrome.storage.sync.get(input, (data) => {
-      const element = document.getElementById(input);
-      element.value = data[input] || '';
-    });
-  })
+  chrome.storage.sync.get('projects', (data) => {
+    const element = document.getElementById('projects');
+    element.value = data['projects'] || '';
+  });
 }
 constructOptions();
-
-
-
-// Initialize button with user's preferred color
-// let changeColor = document.getElementById("changeColor");
-//
-// chrome.storage.sync.get("color", ({ color }) => {
-//   changeColor.style.backgroundColor = color;
-// });
-//
-// // When the button is clicked, inject setPageBackgroundColor into current page
-// changeColor.addEventListener("click", async () => {
-//   let [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-//
-//   chrome.scripting.executeScript({
-//     target: { tabId: tab.id },
-//     function: setPageBackgroundColor,
-//   });
-// });
-//
-// // The body of this function will be executed as a content script inside the
-// // current page
-// function setPageBackgroundColor() {
-//   chrome.storage.sync.get("color", ({ color }) => {
-//     document.body.style.backgroundColor = color;
-//   });
-// }
